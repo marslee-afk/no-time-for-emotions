@@ -1,0 +1,598 @@
+<!DOCTYPE html><html>
+<head>
+    <title>Permafrost Reef</title>
+    <style>body>div {max-width:800px;margin:0 auto;position:relative}
+        fieldset {width:fit-content}
+        a {color: purple}
+        fieldset p {margin:0px}
+        p.m {font-family:monospace}
+        aside.inventory {position:absolute;right:10px;float:right;background-color:white}
+    </style>
+</head>
+<body>
+<script>
+    let numbers = {
+        fishNum: 1000,
+        seaweedNum: 1000,
+        clamNum: 1000,
+        shellNum: 1000000
+    }, humans = {
+        childNum: 23,
+        adultNum: 47,
+        elderNum: 12,
+        meatprop: 0.5
+    }
+    const text = {
+        clam: "Clams",
+        fish: "Fish",
+        seaweed: "Seaweed",
+        driftwood: "Driftwood"
+    }, metric = {
+        Clams: 'clam',
+        Fish: 'fish',
+        Seaweed: 'seaweed',
+        Shells: 'shell',
+        Driftwood: 'driftwood'
+    }, weightClasses = {
+        fish: [9,2],
+        clam: [45,5],
+        seaweed: [1,0.3]
+    }
+    let rodAccu = 0.6
+    let clamAccu = 0.4
+    let shellAccu = 0.4
+    let diveAccu = 0.2
+    let diveDepth = 3
+    function travel(from, to) {
+            document.querySelector('div.'+from).style.display = 'none'
+            document.querySelector('div.'+to).style.display = 'block'
+    }
+    function iniItem(target, targetText) {
+        if (document.querySelector('span#'+target)) {
+            return document.querySelector('span#'+target)
+        } else {
+            const p = document.createElement('p')
+            const span = document.createElement('span')
+            span.id = target
+            p.appendChild(document.createTextNode(`${targetText}: `))
+            span.appendChild(document.createTextNode('0'))
+            p.appendChild(span)
+            document.querySelector('aside fieldset#spoil').append(p)
+            return span
+        }
+    }
+    function shotloop(accuracy, chances, target) {
+        let targetCount = 0
+        for (let i = 0; i < chances; i++) {
+            if (Math.random() < accuracy) {
+                targetCount+=1
+        }   } return targetCount
+    }
+    function randomGauss(mean, stdDev) {
+        let u1 = Math.random(), u2 = Math.random();
+        let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        return z0 * stdDev + mean;
+    }
+</script><div>
+    <div class="intro">
+        <p>A nuke falls on Fantasia, one of the biggest metropolises on Earth.</p>
+        <p>Soon, every major city has a nuke detonated within it.</p>
+        <p>A family cries, mourning for their daughter and grandparents, caught in the blast.</p>
+        <p>A weatherperson recounts that, for the 3rd year in a row, temperatures are at an all time low.</p>
+        <p>Your dad speaks up. "Honey, I think it's time that you start learning how to feed yourself."</p>
+        <p>"What do you mean?"</p>
+        <p>"You're 18. You have to go get a job now. Feed the village."</p>
+        <p>And that's how you're at the beach, trying to get a bite to eat.</p>
+        <button>Ocean</button>
+        <script>document.querySelector('button').addEventListener('click',()=>{
+            travel('intro','ocean')
+            document.querySelector('aside.inventory').style.display='block'
+        })</script>
+    </div>
+    <aside class="inventory" style="display:none">
+        <fieldset><legend>Inventory</legend>
+            <fieldset id="spoil"><legend>Spoils</legend></fieldset>
+            <fieldset id="viltem"><legend>Resources</legend>
+                <p>Credits: <span id="credit">0</span></p>
+                <p style="display:none">Meat: <span id="food">0</span></p>
+                <p style="display:none">Coal: <span id="coal">0</span></p>
+            </fieldset>
+            <fieldset id="village" style="display:none"><legend>Village</legend>
+                <p>Population: <span id="totalpop"></span></p>
+                <p>Required Meat: <span id="reqfood"></span></p>
+                <p>Required Coal: <span id="reqcoal"></span></p>
+                <script>
+                    let totalpop = humans.childNum+humans.adultNum+humans.elderNum
+                    document.querySelector('span#totalpop').innerText = totalpop
+                    document.querySelector('span#reqfood').innerText = Math.ceil((
+                        humans.childNum*250+
+                        humans.adultNum*336+
+                        humans.elderNum*356
+                    ) / (humans.adultNum*humans.meatprop))
+                    document.querySelector('span#reqcoal').innerText = Math.ceil((
+                        Math.ceil(totalpop/4)*4000
+                    ) / humans.adultNum)
+                </script>
+            </fieldset>
+            <fieldset id="upgrades"><legend>Upgrades</legend></fieldset>
+        </fieldset>
+    </aside>
+    <div class="ocean" style="display:none">
+        <pre> By unknown on ASCII Art Archive <a target="ascii" href="https://www.asciiart.eu/search?q=sea&m=natural#:~:text=earthrise%20sea%20tranquility">https://www.asciiart.eu/search?q=sea</a>
+
+            ______.._      _..________    _____
+__.._.-.'""".: ::::  `-._.',;::::::.;:`--' ,..;`-.--...___
+;:::,.  ,;::::  ::    `-. ,.;::::... .; ,;::::::. ,;:::;.,
+;::::::::::::::  :::  ::. ,;:::::. ,:: .,;:::... ,;::::.,;
+ ,.;:::::., .;::. :::: ::. ,;::: ,:::   .;:::::::., ,.;:::
+  :::::::.., ,;:: ,;:::. ,.;":::.:::  ,.;:::::::;.,..,;:::
+:::::.., .;:::::.,.:; ______.......___ ,.;::::::::;.., .,:
+____.....------"""""""""---.,;:::::::,""--......__________
+:::::'                                     `,;;::::. ,;:::
+     ,;:.         .:,                ,.;            ,__,;.
+                           -.                 .-..
+  .-..      ._.         ._.    ,;'       __   `--'   
+  `--'
+        </pre><span class="action"></span><br>
+        <button onclick="fish()">Fish</button><br>
+        <button onclick="findshell()">Find Shells</button><br>
+        <button onclick="driftwood()">Find Driftwood</button><br>
+        <button onclick="seation.innerText = 'You look out across the ocean...'">Look Across Ocean</button><br>
+        <fieldset id="dive">
+            <legend>Dive!</legend>
+            Method:
+            <label><input type="radio" value="shallows" name="method" checked>Swimming</label>
+            <label><input type="radio" value="shelf" name="method" disabled>Snorkeling</label>
+            <label><input type="radio" value="deep" name="method" disabled>Scuba Diving</label><br>
+            Target:
+            <label><input type="radio" value="any" name="target" checked>Any</label><span>
+            <label style="display:none"><input type="radio" value="clam" name="target" disabled>Clams</label>
+            <label style="display:none"><input type="radio" value="fish" name="target" disabled>Fish</label>
+            <label style="display:none"><input type="radio" value="seaweed" name="target" disabled>Seaweed</label><br>
+            </span><button onclick="dive()">Dive</button>
+            <fieldset id="diveRes" style="display:none"><legend>Results</legend></fieldset>
+        </fieldset><br>
+        
+        <p>Head to: <button onclick="travel('ocean','road')">Road</button></p>
+        <script>
+            const seation = document.querySelector('.ocean span.action')
+            function fish() {    
+                let fish = iniItem('fish', 'Fish')
+                const fishweight = randomGauss(9,2)
+                if (Math.random() < rodAccu) {
+                    numbers.fishNum-=1
+                    if (numbers.fishNum > 0) {
+                        fish.className+=fishweight+' '
+                        fish.innerText = fish.className.split(' ').length-1
+                        seation.innerText = "You managed to catch a fish! It weighs "+Math.round(fishweight)+" pounds!"
+                    } if (numbers.fishNum == 0) {
+                        document.querySelector('div.ocean>button').disabled = true
+                        fish.parentNode.innerText = "There are no fish. You fed them all to your village."
+                        seation.innerText = "You can't see any more shadows in the ocean, besides the one on your fishing line."
+                    }
+                } else {
+                    seation.innerText = "You waited... but no fish bit by the time your patience ran out."
+                }
+            }
+            function dive() {
+                const biome = {
+                    shallows: ['clam','seaweed'],
+                    shelf: ['fish','clam','seaweed'],
+                    deep: ['fish','seaweed'],
+                },
+                chosenbiome = document.querySelector('input[name="method"]:checked').value,
+                specieslist = biome[chosenbiome]
+                target = document.querySelector('input[name="target"]:checked').value
+                if (target!='any' && !specieslist.includes(target)) {
+                    seation.innerText = `You searched in the ${chosenbiome} for ${target}, but came up empty. Perhaps you should search somewhere else? Or choose a different target.`
+                    return
+                }
+                let captures = []
+                for (let i = 0; i < diveDepth; i++) {
+                    if (Math.random() < diveAccu) {
+                        let choSpecies
+                        if (target == 'any') {
+                            choSpecies = specieslist[Math.floor(Math.random()*specieslist.length)]
+                        } else {
+                            choSpecies = target.toLowerCase()
+                        }
+                        captures.push([choSpecies, randomGauss(...weightClasses[choSpecies])])
+                }   }
+                if (captures.length != 0) {
+                    document.querySelector('fieldset#diveRes').style.display = 'block'
+                    document.querySelector('button[onclick="dive()"]').disabled=true
+                }
+                let captureRes = [document.querySelector('fieldset#diveRes').firstElementChild]
+                for (let i = 0; i < captures.length; i++) {
+                    const capture = captures[i];
+                    const div = document.createElement('div')
+                    div.className = capture.join(' ')
+                    const harvestbutton = document.createElement('button')
+                    harvestbutton.addEventListener('click', (e)=>{harvest(e)})
+                    harvestbutton.innerText = "Harvest"
+                    const releasebutton = document.createElement('button')
+                    releasebutton.addEventListener('click', (e)=>{release(e)})
+                    releasebutton.innerText = "Release"
+                    div.append(document.createTextNode(`You caught a ${capture[0]} that weighs ${Math.round(capture[1])} pounds!`))
+                    div.append(document.createElement('br'))
+                    div.append(harvestbutton)
+                    div.append(document.createTextNode(' '))
+                    div.append(releasebutton)
+                    captureRes.push(div)                    
+                } document.querySelector('fieldset#diveRes').replaceChildren(...captureRes)
+                let targetName; if (target = 'any') {targetName='items'} else {targetName=target}
+                seation.innerText = `While diving, you caught ${captures.length} ${targetName}!`
+                if (captures.length == 0) {seation.innerText = `You dove for ${targetName}, but came up empty.`} 
+            }
+            document.querySelector('fieldset#diveRes').addEventListener('click',()=>{
+                if (document.querySelector('fieldset#diveRes').children.length == 1) {
+                    document.querySelector('button[onclick="dive()"]').disabled=false
+                    document.querySelector('fieldset#diveRes').style.display = 'none'
+                }
+            })
+            document.querySelector('fieldset#dive').addEventListener('click',()=>{
+                for (let i = 0; i < document.querySelectorAll('span label>input').length; i++) {
+                    const element = document.querySelectorAll('span label>input')[i];
+                    if (document.querySelector('fieldset#spoil #'+element.value)) {
+                        element.disabled = false
+                        element.parentNode.style.display = 'inline'
+                    }
+                }
+            })
+            function harvest(e) {
+                catchinfo = e.target.parentNode.classList
+                let item = iniItem(catchinfo[0], text[catchinfo[0]])
+                numbers[catchinfo[0]]-=1
+                item.className+=catchinfo[1]+' '
+                item.innerText = item.className.split(' ').length-1
+                e.target.parentNode.remove()
+            }
+            function release(e) {e.target.parentNode.remove()}
+            function findshell() {
+                let shell = iniItem('shell','Shells')
+                let shellCount = shotloop(shellAccu, 10, 'shell')
+                shell.innerText = shell.innerText*1 + shellCount
+                seation.innerText = "You walk along the beach, searching for pretty shells, and manage to find "+shellCount+" of them."
+            }
+            function driftwood() {
+                let wood = iniItem('driftwood','Driftwood')
+                let woodCount = shotloop(diveAccu*2, 10, 'driftwood')
+                wood.innerText = wood.innerText*1 + woodCount
+                seation.innerText = "You walk along the beach at low tide, searching for driftwood that washed upon shore, and manage to find "+woodCount+" pieces."
+            }
+        </script>
+    </div>
+    <div class="road" style="display:none">
+        <pre>By unknown on ASCII Art Archive <a target="ascii" href="https://www.asciiart.eu/search?q=road#:~:text=matching%20(%2Bword%2C%20%2Dword).-,road,By%20unknown,-___%20%20%2C%2D%2D.%20%20__________________________/%20%20%20%2C%20%20%20/_______">https://www.asciiart.eu/search?q=road</a>
+                                         Town
+ _____________________________________/   ,   /_______
+    
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         _____                       
+ _______< Home|_____        _______________________
+           ||      /   ,   /
+                     Ocean
+        </pre>
+        Head to:
+        <button onclick="travel('road','home')" disabled>House</button>
+        <button onclick="travel('road','ocean')">Ocean</button>
+        <button onclick="travel('road','town')">Town</button>
+    </div>
+    <div class="home" style="display:none">
+        <pre>By unknown <a target="ascii" href="https://asciiart.website/art/2749">asciiart.website/art/2749</a>
+
+ ( )  -
+     \
+ |                                               ~
+                                             ~
+                                       __~
+                    %                 [__]
+                   .|________     ____[__]_________________
+                   /\ --    -  \ /\  __\____\_____\_____\___\
+                 /____\========///\\\ \____\____\_____\____\__\
+                 |    | |  | /////\\\\\ __\____\____\____\____\_\
+ `               |#   |_0_|///////\\\\\\\ \___\____\____\____\____\
+   \~~~~/                /-!^^^^^^^^^^^^!\___\___\_____\____\____\__
+ `'  ' `'                  |{} ,--,  _  |    _____     _____      |
+   @    `                  |   |[.| [_] |   [--|--]   [--|--]     |
+  \|/     `'             ` | . | ]|     |  @ ~~~~~   * ~~~~~  %   |
+ `'    *                    `' ==== `*' `' `  '` 'U ` '  `   ` '  `'
+      `|'  `'               ---   `'    '   ` `' \|/  '  `'   #  `
+
+  `'                                    `'                  '       `
+       `'                                      `      '
+                 `'</pre>
+        Head to:
+        <button onclick="travel('home','road')">Road</button><br>
+        <button onclick="travel('home','bedroom')">Bedroom</button>
+        <button>TV Room</button>
+        <button disabled>Pantry</button><br>
+        <button disabled>Kitchen</button>
+        <button onclick="travel('home','bathroom')">Bathroom</button>
+        <button disabled>Backyard</button>
+    </div>
+    <div class="bedroom" style="display:none">
+        <pre>By Lorrie <a href="https://asciiart.website/art/2987">asciiart.website/art/2987</a>
+            
+    .    !__________!    .    _______
+   /_\   |____  ____|   /_\   |__*__|
+  __|__  {____}{____}  __|__  |__*__|
+__|_*_|__%%%%%%%%%%%%__|_*_|__|__*__|__
+  |   | %%%%%%%%%%%%%% |   |  |/   \|
+       %%%%%%%%%%%%%%%%
+      %%%%%%%%%%%%%%%%%%
+     %%%%%%%%%%%%%%%%%%%%
+    /||||||||||||||||||||\
+    ||||||||||||||||||||lc
+        </pre>
+        <button onclick="travel('bedroom','dream');document.querySelector('aside').style.display='none'">Go to Sleep</button><br>
+        <button onclick="travel('bedroom','sleep');document.querySelector('aside').style.display='none'">Sleep for a Week</button>
+        <br><br>
+        Head to: 
+        <button onclick="travel('bedroom','home')">Living Room</button>
+        <button onclick="travel('bedroom','bathroom')">Bathroom</button>
+    </div>
+    <div class="dream" style="display:none">
+        <p>The wind is getting colder every day. What once was a refreshing breeze is now a cold bite.</p>
+        <p>You hadn't understood the term, when you heard a traveller say it before. How does wind bite? Now you know how.</p>
+        <p>You look up at the sky. When was the last time you saw the sun?</p>
+        <p>When was the last time you saw anything but dark clouds, swallowing all light?</p>
+        <button onclick="travel('dream','bedroom');document.querySelector('aside').style.display='block'">Wake Up</button>
+    </div>
+    <div class="sleep" style="display:none">
+        <p>As you settle down into bed, you're acutely aware of one thing in particular:</p>
+        <p>You got off easy this year. The others had to work double time to keep the village running, especially since the fields are freezing over.</p>
+        <p>Next year, it won't be so casual.</p>
+        <p>The elders thought that the ever-encroaching winter wouldn't come for this quant little village, where the sun beat down on us daily.</p>
+        <p>The sun hasn't risen in 3 years. It may never do so again.</p>
+        <p>But that's a problem for future you. The you that exists now, is going to bed.</p>
+        <button onclick="yearroll();travel('sleep','report')">Year 2</button>
+        <script>
+        function yearroll(){
+            // This is when everything gets repopulated!
+        }</script>
+    </div>
+    <div class="report" style="display:none">
+        <p>Over the course of the year, you got enough food to fulfill your share of the village's needs!</p>
+        <p>Your dad is happy you found a job so quickly, selling the bounties of the sea to trade or use for food.</p>
+        <button onclick="travel('report','bedroom')"></button>
+    </div>
+    <div class="bathroom" style="display:none">
+        <pre>By Lorrie <a href="https://asciiart.website/art/2785">asciiart.website/art/2785</a>
+
+                                                         |
+                                            __________   |
+                           _    __    _    |          |  |
+                          /_\  /  \  /_\   |          |  |
+                          =|= | // | =|=   |          |  |
+                           !   \__/   !    |          |  |
+                                 _         |          |  |
+ ___               ___          //'        |          |  |
+[___]       _   :=|   |=:   __T_||_T__     |p=        |  |
+|  ~|     =)_)=   |   |    [__________]    |          |  |
+|   |      (_(    |xXx|     \_      _/     |          |  |
+|   |      )_)    """""       \    /       |          |  |
+\___|                          |  |        |          |  |
+ |  `========,                 |  |        |          |  |
+__`.        .'_________________|  |________|__________lc_|
+    `.    .'                  (____)                      \
+    _|    |_...             .;;;;;;;;.                     \
+   (________);;;;          :;;;;;;;;;;:                     \
+        :::::::'            '::::::::'                       \
+---------------------------------------------------------------</pre>
+        <span class="action"></span><br>
+        <button onclick="bathtion.innerText = 'You washed the sea and fish off your hands and arms.'">Wash Hands</button>
+        <button onclick="bathtion.innerText = 'You flushed the toilet. Perhaps unnecessarily. Do you know which?'">Flush Toilet</button>
+        <button onclick="bathtion.innerText = 'You took a shower. Refreshing!'">Take Shower</button>
+        <br><br>
+        Head to:
+        <button onclick="travel('bathroom','home')">Living Room</button>
+        <button onclick="travel('bathroom','bedroom')">Bedroom</button>
+        <script>const bathtion = document.querySelector('div.bathroom span.action');</script>
+        
+    </div>
+    <div class="town" style="display:none">
+        <pre>By unknown <a target="ascii" href="https://asciiart.website/art/883">asciiart.website/art/883</a>
+
+      ....           ....           ....           ....
+     ||             ||             ||             ||
+ /"""l|\        /"""l|\        /"""l|\        /"""l|\
+/_______\      /_______\      /_______\      /_______\
+|  .-.  |------|  .-.  |------|  .-.  |------|  .-.  |------
+ __|L|__|      |__|L|__|      |__|L|__|      |__|L|__|     
+_\  \\p_________\  \\p_________\  \\p_________\  \\p________
+------------------------------------------------------------
+------------------------------------------------------------ 
+------------------------------------------------------------
+        </pre>
+        Head to:
+        <button onclick="travel('town','road')">Road</button><br>
+        <button onclick="travel('town','shop');refreshShop()">Shop</button>
+        <button disabled>Butcher</button>
+        <button disabled>Recruitment Agency</button>
+        <button disabled>Ecological Reseach</button><br>
+        <button disabled>Main Square</button>
+        <button disabled>Courthouse</button>
+        <button disabled>Library</button>
+        <button disabled>Schoolhouse</button>
+    </div>
+    <div class="shop" style="display:none">
+        <pre>By Sherry Stowers <a target="ascii" href="https://asciiart.website/art/2770">asciiart.website/art/2770</a>
+
+    [=U=U=U=U=U=U=U=U=U=U=U=U=U=U=U=]
+    |.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.|
+    |        +-+-+-+-+-+-+-+        |
+    |        |Bait & Tackle|        |
+    |        +-+-+-+-+-+-+-+        |
+    |.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.|
+    |  _________  __ __  _________  |
+  _ | |___   _  ||[]|[]||  _      | | _
+ (!)||OPEN|_(!)_|| ,| ,||_(!)_____| |(!)
+.T~T|:.....:T~T.:|__|__|:.T~T.:....:|T~T.
+||_||||||||||_|||||||||||||_||||||||||_||
+~\=/~~~~~~~~\=/~~~~~~~~~~~\=/~~~~~~~~\=/~
+  | -------- | ----------- | -------- |
+~ |~^ ^~~^ ~~| ~^  ~~ ^~^~ |~ ^~^ ~~^ |^~
+        </pre>
+        <button onclick="travel('shop','town')">Head Outside</button>
+        <br><br><span class="action">The shopkeeper smiles warmly at you.</span>
+        <fieldset id="wares"><legend>Wares:</legend>
+        <ul>
+            <li class="divemask">Diving Mask: 20C <button name="look">Look At</button><button name="buy" onclick="buy('Diving Mask',20)">Buy</button></li>
+            <li class="divesuit">Diving Suit: 50C <button name="look">Look At</button><button name="buy" onclick="buy('Diving Suit',50)">Buy</button></li>
+            <li class="key">Key To Your House: 400C <button name="look">Look At</button><button name="buy" onclick="buy('Key To Your House',400)">Buy</button></li>
+            <li class="quickbuy">QuickBuy Guide: 1000C <button name="look">Look At</button><button name="buy" onclick="buy('QuickBuy Guide',1000)">Buy</button></li>
+            <li class="quicksell">QuickSell Guide: 1000C <button name="look">Look At</button><button name="buy" onclick="buy('QuickSell Guide',1000)">Buy</button></li>
+        </ul>
+        <fieldset style="display:none"><legend></legend></fieldset>
+        <script>
+            const wares = {
+                'Key To Your House': [`"Your parents told me to keep this for you. Your father also told me that you needed a job, so go get some money!"`,()=>{document.querySelector('div.road>button').disabled=false}],
+                'Diving Mask': [`A scuba mask that covers your eyes and nose. Makes it way easier to see, compared to the swimming goggles you were using.`,()=>{diveAccu+=0.3;document.querySelector('input[value=shelf]').disabled=false}],
+                'Diving Suit': [`Comes with a free, refillable tank of air. Has a respirator that makes it possible to breathe the air you bring underwater.`,()=>{diveDepth+=3;document.querySelector('input[value=deep]').disabled=false}],
+                'QuickBuy Guide': [`Teaches you how to buy things without looking at them first. Great for impulse buying.`,()=>{let b = document.querySelectorAll('button[name="buy"]'); for (let i = 0;i < b.length;i++) {b[i].style.display='inline'}}],
+                'QuickSell Guide': [`Teaches you how to sell some things without the shopkeeper apprasing them first.`,()=>{let s = document.querySelectorAll('button[name="sell"]'); for (let i = 0;i < s.length;i++) {s[i].style.display='inline'}}],
+                }
+        </script>
+        </fieldset>
+        <fieldset id="sellable"><legend>Inventory:</legend>
+        <ul>
+            <li>Nothing? | <button name="look">Look At</button><button name="sell">Sell</button></li>
+        </ul>
+        <fieldset style="display:none"><legend></legend></fieldset>
+        <script>
+            const sellable =  {
+                'Nothing?': `"You're trying to sell air to me?"`,
+                'Fish': `A good ol' fish from the sea.`,
+                'Clams': `A shelled creature, found below the sand.`,
+                'Seaweed': `Algae rooted in the depths of the shelf.`,
+                'Shells': `A shell found on the beach.`,
+                'Driftwood': `Small pieces of damp wood that washed up on shore or near the beach.`
+                }
+        </script>
+        </fieldset>
+        <script>
+            const shoption = document.querySelector('div.shop span.action')
+            const nothing = document.createElement('li')
+            nothing.innerHTML = 'Nothing? | <button name="look">Look At</button><button name="sell" onclick="sell('+'Nothing?'+')" style="display:none">Sell</button>'
+            nothing.children[0].addEventListener('click',(e)=>lookAt(e))
+            function refreshShop() {
+                const invenList = [...document.querySelector('fieldset#spoil').children].slice(1)
+                const ul = document.querySelector('#sellable ul')
+                let sellingList = []
+                for (let i = 0; i < invenList.length; i++) {
+                    const element = invenList[i].innerText.split(': ');
+                    if (element[1]*1 == 0) {continue}
+                    sellingList.push(element[0]+' | ')
+                }
+                for (let i = 0; i < sellingList.length; i++) {
+                    const li = document.createElement('li')
+                    li.className = sellingList[i].split(' | ')[0]
+                    const look = document.createElement('button')
+                    look.name = "look"; look.innerText = "Look At"
+                    look.addEventListener('click',(e)=>{lookAt(e)})
+                    const buy = document.createElement("button")
+                    buy.name = "sell"; buy.innerText = "Sell"; buy.onclick = ()=>{sell(li.className)}
+                    console.log(document.querySelector('#upgrades .quicksell'))
+                    if (!document.querySelector('#upgrades .quicksell')) {buy.style.display = "none"}
+                    li.innerText = sellingList[i]
+                    li.append(look)
+                    li.append(buy)
+                    sellingList[i] = li
+                } 
+                sellingList.unshift(nothing)
+                if (sellingList.length == 1) {
+                    ul.replaceChildren(...sellingList)
+                } else {ul.replaceChildren(...sellingList.slice(1))}
+            }
+            for (let i = 0; i < document.querySelectorAll('button[name="buy"]').length; i++) {
+                document.querySelectorAll('button[name="buy"]')[i].style.display = 'none'
+            }
+            for (let i = 0; i < document.querySelectorAll('button[name="sell"]').length; i++) {
+                document.querySelectorAll('button[name="sell"]')[i].style.display = 'none'
+            }
+            for (let i = 0; i < document.querySelectorAll('button[name="look"]').length; i++) {
+                document.querySelectorAll('button[name="look"]')[i].addEventListener('click', (e)=>{lookAt(e)})
+            }
+            function lookAt(e) {
+                const itemcol = e.target.closest('fieldset')
+                const button = document.createElement('button')
+                let fieldset, item
+                const legend = document.createElement('legend')
+                if (itemcol.id == 'sellable') {
+                    document.querySelector('#sellable>fieldset').style.display='block'
+                    item = e.target.parentNode.innerText.split(' | ')[0]
+                    legend.innerText = item
+                    button.name = 'sell'; button.innerText = 'Sell'
+                    button.addEventListener('click', ()=>{sell(item)})
+                    document.querySelector('#sellable>fieldset').replaceChildren(legend,
+                        document.createTextNode(sellable[item]), document.createElement('br'), button)
+                } if (itemcol.id == 'wares') {
+                    document.querySelector('#wares>fieldset').style.display = 'block'
+                    item = e.target.parentNode.innerText.split(':')[0]
+                    legend.innerText = item
+                    button.name = 'buy'; button.innerText = 'Buy'
+                    price = e.target.parentNode.innerText.split(': ')[1].split('C')[0]
+                    button.onclick = ()=>buy(item, price)
+                    document.querySelector('#wares>fieldset').replaceChildren(legend,
+                        document.createTextNode(wares[item][0]), document.createElement('br'), button)
+                }
+            }
+            function buy(item, price) {
+                let wallet = document.querySelector('span#credit')
+                let walletCred = wallet.innerText*1
+                const shopInven = [...document.querySelector('#wares ul').children]
+                for (let i = 0; i < shopInven.length; i++) {
+                    let shopItem = shopInven[i]
+                    shopInven[i] = [shopItem.innerText.split(':')[0], shopItem.className] 
+                } let chosenItem = shopInven.find((elem)=>{return elem[0] == item})[1]
+                if (walletCred >= price) {
+                    const dummyBut = document.createElement('button')
+                    dummyBut.innerText = "Sold!"; dummyBut.disabled = true
+                    wallet.innerText = wallet.innerText*1 - price
+                    console.log(item)
+                    const p = document.createElement('p')
+                    p.innerText = item
+                    p.className = chosenItem
+                    document.querySelector('fieldset#upgrades').append(p)
+                    document.querySelector('li.'+chosenItem).replaceChildren(document.createTextNode(item+': '),dummyBut)
+                    document.querySelector('#wares>fieldset').replaceChildren()
+                    document.querySelector('#wares>fieldset').style.display='none'
+                    shoption.innerText = `You bought the ${item}! The shopkeeper informs you that you have ${wallet.innerText} credits remaining.`
+                    wares[item][1]()
+                } else {
+                    shoption.innerText = `You bring the ${item} up to the shopkeeper, but she informs you that you are ${price-walletCred} credits short.`
+                }
+            }
+            function sell(item) {
+                let wallet = document.querySelector('span#credit')
+                let itemCount = document.querySelector('span#'+metric[item])
+                let value = 0, itemName = metric[item]
+                if (item == "Nothing?") {
+                    shoption.innerText = `"Air is free, don't ya know? I can't buy free stuff."`
+                    return
+                } else if (itemCount.innerText*1 == 0) {
+                    shoption.innerText = `You check your bag, but realize: You don't actually possess any more ${item.toLowerCase()}...`
+                    document.querySelector('li.'+item).remove()
+                    document.querySelector('#sellable>fieldset').replaceChildren()
+                    document.querySelector('#sellable>fieldset').style.display='none'
+                    if (document.querySelector('#sellable ul').children.length == 0) {
+                        document.querySelector('#sellable ul').append(nothing)
+                    }
+                    return
+                } else if (item == "Shells" && itemCount.innerText*1 > 0) {
+                    value = 3
+                } else if (item == "Driftwood" && itemCount.innerText*1 > 0) {
+                    value = 1
+                } else {
+                    console.log(itemCount.classList)
+                    value = Math.max(Math.floor(itemCount.classList[0]*0.5),1)
+                    itemCount.classList.remove(itemCount.classList[0])
+                }
+                wallet.innerText = wallet.innerText*1 + value*1
+                itemCount.innerText = itemCount.innerText*1 - 1
+                shoption.innerText = `You sold a ${metric[item]} for ${value} credits.`
+            }
+        </script>
+    </div></div>
+</body></html>
